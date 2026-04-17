@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemitApp Desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+  :root{
+    --lime:#C6FF3D; --lime-dark:#A8E026;
+    --ink:#0A0A0A; --bg:#F3F4F6; --card:#FFFFFF;
+    --muted:#6B7280; --line:#E5E7EB;
+  }
+  html,body{height:100%;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;}
+  button{font-family:inherit;cursor:pointer;border:0;}
+  input,select,textarea{font-family:inherit;}
+
+  .app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+
+  /* Sidebar */
+  aside{background:var(--ink);color:#fff;padding:24px 18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;}
+  .logo{display:flex;align-items:center;gap:10px;padding:4px 6px 18px;border-bottom:1px solid #1F1F1F;margin-bottom:14px;}
+  .logo-ico{width:36px;height:36px;border-radius:10px;background:var(--lime);display:flex;align-items:center;justify-content:center;}
+  .logo-ico svg{width:18px;height:18px;}
+  .logo-name{font-weight:800;font-size:15px;letter-spacing:-.02em;}
+  .logo-sub{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#A3A3A3;font-weight:700;}
+
+  .nav-link{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;color:#A3A3A3;font-size:13px;font-weight:600;cursor:pointer;background:transparent;text-align:left;width:100%;}
+  .nav-link:hover{background:#1A1A1A;color:#fff;}
+  .nav-link.active{background:var(--lime);color:var(--ink);}
+  .nav-link svg{width:16px;height:16px;flex-shrink:0;}
+
+  .sidebar-foot{margin-top:auto;padding-top:14px;border-top:1px solid #1F1F1F;}
+  .sb-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;}
+  .sb-user .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--lime),var(--lime-dark));color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+  .sb-user .mt{flex:1;min-width:0;}
+  .sb-user .mt b{font-size:13px;color:#fff;display:block;}
+  .sb-user .mt span{font-size:10px;color:#A3A3A3;text-transform:uppercase;letter-spacing:.08em;}
+
+  /* Main */
+  main{padding:28px 32px;max-width:100%;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .page-title{font-size:26px;font-weight:800;letter-spacing:-.03em;}
+  .page-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .toolbar{display:flex;gap:10px;align-items:center;}
+
+  .btn{padding:10px 18px;border-radius:12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:transform .1s;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-lime{background:var(--lime);color:var(--ink);box-shadow:0 8px 20px -10px rgba(198,255,61,.6);}
+  .btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .btn svg{width:14px;height:14px;}
+
+  /* KPI grid */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .kpi{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--line);}
+  .kpi.dark{background:var(--ink);color:#fff;border:0;}
+  .kpi .label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+  .kpi.dark .label{color:#A3A3A3;}
+  .kpi .value{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:4px;}
+  .kpi.dark .value-accent{color:var(--lime);}
+  .kpi .trend{font-size:11px;color:var(--muted);margin-top:4px;}
+  .kpi .trend b{color:#15803D;}
+
+  /* Content grid */
+  .content{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .panel-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .panel-title{font-size:14px;font-weight:700;}
+  .panel-body{padding:16px 20px;}
+
+  /* Table */
+  .tbl{width:100%;border-collapse:collapse;}
+  .tbl th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:12px 20px;background:#F9FAFB;border-bottom:1px solid var(--line);position:sticky;top:0;}
+  .tbl td{padding:14px 20px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .tbl tr:last-child td{border-bottom:0;}
+  .tbl tr:hover td{background:#FAFBFC;}
+  .tbl td b{font-weight:700;}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+  .chip-green{background:#DCFCE7;color:#15803D;}
+  .chip-amber{background:#FEF3C7;color:#B45309;}
+  .chip-red{background:#FEE2E2;color:#B91C1C;}
+  .chip-ink{background:var(--ink);color:#fff;}
+  .chip-lime{background:var(--lime);color:var(--ink);}
+
+  /* Truck row */
+  .truck{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);}
+  .truck:last-child{border-bottom:0;}
+  .truck-ico{width:40px;height:40px;border-radius:10px;background:var(--ink);color:var(--lime);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .truck-ico svg{width:18px;height:18px;}
+  .truck-meta{flex:1;}
+  .truck-meta b{font-size:13px;display:block;}
+  .truck-meta span{font-size:11px;color:var(--muted);}
+
+  /* View system */
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Filters */
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .filter{padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;background:var(--card);color:var(--ink);border:1px solid var(--line);cursor:pointer;}
+  .filter.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(10,10,10,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .modal.show{display:flex;}
+  .modal-box{background:var(--card);border-radius:20px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;}
+  .modal-head{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+  .modal-head h3{font-size:18px;font-weight:800;letter-spacing:-.02em;}
+  .modal-close{width:32px;height:32px;border-radius:10px;background:#F3F4F6;display:flex;align-items:center;justify-content:center;}
+  .modal-body{padding:24px;display:flex;flex-direction:column;gap:14px;}
+  .modal-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;}
+
+  /* Forms */
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .field input,.field select,.field textarea{padding:12px 14px;border-radius:10px;background:#F3F4F6;font-size:13px;font-weight:600;color:var(--ink);border:1.5px solid transparent;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;background:#fff;border-color:var(--ink);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+  /* Signature */
+  .sig-wrap{border:2px dashed var(--line);border-radius:14px;position:relative;overflow:hidden;}
+  .sig-wrap canvas{display:block;width:100%;height:200px;touch-action:none;cursor:crosshair;}
+  .sig-hint{position:absolute;top:12px;left:16px;font-size:11px;color:var(--muted);pointer-events:none;}
+  .sig-hint.hidden{display:none;}
+
+  /* Login full screen */
+  .login-screen{display:none;min-height:100vh;background:linear-gradient(135deg,#0A0A0A 0%,#1A1A1A 100%);align-items:center;justify-content:center;padding:40px;}
+  .login-screen.show{display:flex;}
+  .login-card{background:#fff;border-radius:24px;padding:40px;width:100%;max-width:480px;}
+  .login-title{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px;}
+  .login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+  .role-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;}
+  .role-opt{padding:14px 10px;border:1.5px solid var(--line);border-radius:14px;text-align:center;cursor:pointer;}
+  .role-opt.selected{border-color:var(--ink);background:var(--ink);color:#fff;}
+  .role-opt.selected b{color:#fff;}
+  .role-opt svg{width:22px;height:22px;margin-bottom:8px;}
+  .role-opt b{display:block;font-size:12px;font-weight:700;}
+
+  /* Empty state */
+  .empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;}
+
+  /* Toast */
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--lime);padding:14px 24px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:all .25s;pointer-events:none;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* Success banner */
+  .success-banner{background:linear-gradient(135deg,var(--lime),var(--lime-dark));border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+  .success-banner .ico{width:48px;height:48px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;}
+  .success-banner .ico svg{width:24px;height:24px;color:var(--lime);}
+  .success-banner b{display:block;font-size:16px;font-weight:800;}
+  .success-banner span{font-size:12px;opacity:.8;}
+
+  @media (max-width:960px){
+    .app{grid-template-columns:1fr;}
+    aside{position:static;height:auto;flex-direction:row;overflow-x:auto;}
+    .logo{border-bottom:0;margin:0;padding:0 10px 0 0;border-right:1px solid #1F1F1F;}
+    .sidebar-foot{display:none;}
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .content{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN FULL SCREEN ═══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--ink);display:flex;align-items:center;justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="2.5"><path d="M3 17h13V7H3zM16 10h4l2 3v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+      </div>
+      <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em;">RemitApp</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;">Transporte + AFIP</div></div>
+    </div>
+    <div class="login-title">Hola de nuevo</div>
+    <div class="login-sub">Elegí tu rol para ingresar al sistema.</div>
+    <div class="role-options" id="roleOptions">
+      <div class="role-opt" data-role="chofer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+        <b>Chofer</b>
+      </div>
+      <div class="role-opt" data-role="supervisor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        <b>Supervisor</b>
+      </div>
+      <div class="role-opt selected" data-role="admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/></svg>
+        <b>Admin</b>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:20px;">
+      <label>Tu nombre</label>
+      <input id="loginName" value="Osvaldo" />
+    </div>
+    <button class="btn btn-lime" style="width:100%;padding:14px;" onclick="doLogin()">Ingresar al panel</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div class="app" id="app" style="display:none;">
+
+  <aside>
+    <div class="logo">
+      <div class="logo-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5"><path d="M3 17h13V7H3zM16 10h4l2 3v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></div>
+      <div><div class="logo-name">RemitApp</div><div class="logo-sub">Transportes</div></div>
+    </div>
+    <button class="nav-link" data-route="home" onclick="location.hash='#home'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+      Panel
+    </button>
+    <button class="nav-link" data-route="remitos" onclick="location.hash='#remitos'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h13V7H3zM16 10h4l2 3v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>
+      Remitos
+    </button>
+    <button class="nav-link" data-route="fleet" onclick="location.hash='#fleet'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h.01M10 12h.01"/></svg>
+      Flota
+    </button>
+    <button class="nav-link" data-route="account" onclick="location.hash='#account'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M8 4v16"/></svg>
+      Cuenta corriente
+    </button>
+    <button class="nav-link" data-route="invoices" onclick="location.hash='#invoices'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      Facturas AFIP
+    </button>
+
+    <div class="sidebar-foot">
+      <div class="sb-user">
+        <div class="av" id="userAv">OV</div>
+        <div class="mt"><b id="userName">Osvaldo</b><span id="userRole">Admin</span></div>
+        <button class="nav-link" style="width:auto;padding:6px;" onclick="resetApp()" title="Reset demo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- HOME -->
+    <div class="view" id="v-home">
+      <div class="topbar">
+        <div><div class="page-title">Panel de flota</div><div class="page-sub" id="todayDate"></div></div>
+        <div class="toolbar">
+          <button class="btn btn-ghost" onclick="location.hash='#remitos'">Ver todos</button>
+          <button class="btn btn-lime" onclick="openNewRemito()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo remito
+          </button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi dark">
+          <div class="label">Facturado mes</div>
+          <div class="value value-accent" id="kpiBilled">$ 0</div>
+          <div class="trend">vs mes anterior <b>+12%</b></div>
+        </div>
+        <div class="kpi">
+          <div class="label">Remitos hoy</div>
+          <div class="value" id="kpiToday">0</div>
+          <div class="trend">en el día</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Sin CAE AFIP</div>
+          <div class="value" id="kpiNoCae">0</div>
+          <div class="trend">requieren atención</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Saldo Tetra</div>
+          <div class="value" id="kpiBal">$ 0</div>
+          <div class="trend">cuenta corriente</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">Remitos recientes</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Últimas 24 horas</div></div>
+            <button class="btn btn-ghost" onclick="location.hash='#remitos'">Ver todos</button>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>SR</th><th>Unidad</th><th>Chofer</th><th>Destino</th><th>Importe</th><th>Estado</th></tr></thead>
+            <tbody id="recentBody"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Flota · <span id="fleetCount">5</span> unidades</div></div>
+          <div id="fleetList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMITOS -->
+    <div class="view" id="v-remitos">
+      <div class="topbar">
+        <div><div class="page-title">Remitos</div><div class="page-sub">Historial completo · filtrá por estado</div></div>
+        <div class="toolbar">
+          <button class="btn btn-lime" onclick="openNewRemito()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo remito
+          </button>
+        </div>
+      </div>
+      <div class="filters" id="filters">
+        <button class="filter active" data-filter="all">Todos <span data-count="all">0</span></button>
+        <button class="filter" data-filter="ok">CAE OK <span data-count="ok">0</span></button>
+        <button class="filter" data-filter="pending">Sin firmar <span data-count="pending">0</span></button>
+        <button class="filter" data-filter="rejected">Rechazados AFIP <span data-count="rejected">0</span></button>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>SR</th><th>Fecha</th><th>Unidad · Chofer</th><th>Destino</th><th>DTM / I-4</th><th>CAE</th><th>Importe</th><th>Estado</th></tr></thead>
+          <tbody id="remitosBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FLEET -->
+    <div class="view" id="v-fleet">
+      <div class="topbar">
+        <div><div class="page-title">Flota</div><div class="page-sub">5 unidades · Rincón + Añelo + Neuquén</div></div>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Patente</th><th>Chofer</th><th>Ubicación</th><th>Estado</th><th>Remitos hoy</th></tr></thead>
+          <tbody id="fleetTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACCOUNT / CUENTA CORRIENTE -->
+    <div class="view" id="v-account">
+      <div class="topbar">
+        <div><div class="page-title">Tetra Energy S.A.</div><div class="page-sub">Cuenta corriente cliente · contrato 1 año</div></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi dark">
+          <div class="label">Saldo</div>
+          <div class="value value-accent" id="accBal">$ 0</div>
+          <div class="trend" style="color:#A3A3A3;">A cobrar</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Facturado mes</div>
+          <div class="value" id="accBilled">$ 0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Cobrado mes</div>
+          <div class="value" id="accPaid">$ 0</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Próxima factura</div>
+          <div class="value" id="accInvCount">0 remitos</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Próxima factura</div></div>
+          <div class="panel-body">
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;"><span style="color:var(--muted);">Neto</span><b id="accNet">$ 0</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-top:1px solid var(--line);"><span style="color:var(--muted);">IVA 21%</span><b id="accIva">$ 0</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:18px;padding:12px 0;border-top:1px solid var(--line);"><b>Total</b><b id="accTotal">$ 0</b></div>
+            <button class="btn btn-lime" style="width:100%;padding:14px;justify-content:center;margin-top:12px;" onclick="emitInvoice()">Generar factura AFIP</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Movimientos recientes</div></div>
+          <div id="accMoves"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="view" id="v-invoices">
+      <div class="topbar">
+        <div><div class="page-title">Facturas AFIP</div><div class="page-sub">Todas las facturas emitidas con CAE</div></div>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr><th>Factura</th><th>Fecha</th><th>Remitos</th><th>Neto</th><th>IVA 21%</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="invoicesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: NEW REMITO -->
+<div class="modal" id="modalRemito">
+  <div class="modal-box">
+    <div class="modal-head"><h3 id="mrTitle">Nuevo remito</h3>
+      <button class="modal-close" onclick="closeModal('modalRemito')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--lime);border-radius:14px;padding:12px 16px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Cliente</div>
+        <div style="font-size:18px;font-weight:800;margin-top:2px;">Tetra Energy S.A.</div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>SR (código Tetra)</label><input id="f_sr" /></div>
+        <div class="field"><label>Unidad</label><select id="f_unit"></select></div>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label>Hora salida</label><input id="f_out" type="time" /></div>
+        <div class="field"><label>Hora pozo</label><input id="f_well" type="time" /></div>
+        <div class="field"><label>Hora regreso</label><input id="f_back" type="time" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>DTM</label><input id="f_dtm" /></div>
+        <div class="field"><label>I-4</label><input id="f_i4" /></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Punto de descarga</label><input id="f_spot" /></div>
+        <div class="field"><label>Importe (ARS)</label><input id="f_amount" inputmode="numeric" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalRemito')">Cancelar</button>
+      <button class="btn btn-primary" onclick="goSign()">Siguiente · Firma</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SIGN -->
+<div class="modal" id="modalSign">
+  <div class="modal-box">
+    <div class="modal-head"><h3>Firma del supervisor en el pozo</h3>
+      <button class="modal-close" onclick="closeModal('modalSign')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#F9FAFB;border-radius:14px;padding:14px;font-size:13px;line-height:1.8;" id="signSummary"></div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:8px;">Firma aquí · Docuseal válido para AFIP</div>
+        <div class="sig-wrap">
+          <div class="sig-hint" id="sigHint">Dibujá la firma con el mouse o el dedo</div>
+          <canvas id="sigCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="clearSig()">Limpiar</button>
+      <button class="btn btn-primary" onclick="submitRemito()">Firmar y emitir CAE</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SUCCESS -->
+<div class="modal" id="modalSuccess">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-body" style="align-items:center;text-align:center;">
+      <div class="success-banner" style="width:100%;">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+        <div><b>Remito firmado y emitido</b><span id="successSub">SR — · Tetra · hoy</span></div>
+      </div>
+      <div style="background:#F9FAFB;border-radius:14px;padding:14px 16px;width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">CAE AFIP</div><div style="font-size:15px;font-weight:800;font-family:ui-monospace,Menlo,monospace;margin-top:2px;" id="successCae">—</div></div>
+          <span class="chip chip-green">Aprobado</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);"><span style="color:var(--muted);">Vence</span><b id="successExp">—</b></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modalSuccess')">Cerrar</button>
+      <button class="btn btn-lime" onclick="closeModal('modalSuccess');openNewRemito();">Cargar próximo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Guardado</div>
+
+<script>
+// ═══ SHARED STATE (same keys as app.html) ═══
+const KEY_REMITOS='stn-remitapp-remitos', KEY_USER='stn-remitapp-user', KEY_INVOICES='stn-remitapp-invoices';
+
+const FLEET = [
+  { id:1, plate:'AC 234 BX', driver:'Juan P.',    loc:'Bajo los Toros',  status:'active' },
+  { id:2, plate:'AC 891 PM', driver:'Diego L.',   loc:'Base Añelo',      status:'pause' },
+  { id:3, plate:'AF 102 KL', driver:'Carlos R.',  loc:'Rincón → Añelo',  status:'active' },
+  { id:4, plate:'AF 455 TX', driver:'Martín O.',  loc:'Loma Campana',    status:'active' },
+  { id:5, plate:'AG 770 JS', driver:'Rubén A.',   loc:'Base Rincón',     status:'pause' },
+];
+const SEED_REMITOS = [
+  { id:'r-seed-1', sr:'4821', unitId:1, out:'08:15', well:'09:42', back:'11:20', dtm:'DTM-00412', i4:'I4-0987', spot:'Bajo los Toros · Loc 14', amount:184500, status:'ok',       cae:'74112398021155', date:hoy(0), sig:true  },
+  { id:'r-seed-2', sr:'4820', unitId:3, out:'07:30', well:'08:55', back:'10:40', dtm:'DTM-00411', i4:'I4-0986', spot:'Loma Campana',           amount:162000, status:'pending',  cae:null,             date:hoy(0), sig:false },
+  { id:'r-seed-3', sr:'4819', unitId:2, out:'09:00', well:'10:30', back:'12:00', dtm:'',          i4:'I4-0985', spot:'Añelo · Pozo 4',         amount:150200, status:'rejected', cae:null, reason:'Falta DTM', date:hoy(-1), sig:true  },
+];
+
+function hoy(o){ const d=new Date(); d.setDate(d.getDate()+o); return d.toISOString().slice(0,10); }
+function load(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function saveLS(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function getRemitos(){ return load(KEY_REMITOS, SEED_REMITOS); }
+function setRemitos(r){ saveLS(KEY_REMITOS, r); }
+function getUser(){ return load(KEY_USER, null); }
+function setUser(u){ saveLS(KEY_USER, u); }
+function getInvoices(){ return load(KEY_INVOICES, []); }
+function setInvoices(i){ saveLS(KEY_INVOICES, i); }
+
+function fmtARS(n){ return '$ ' + Number(n||0).toLocaleString('es-AR'); }
+function initials(name){ return (name||'').trim().split(' ').map(s=>s[0]||'').slice(0,2).join('').toUpperCase() || 'U'; }
+function genCAE(){ const base = Date.now().toString().slice(-10); return '74' + base + Math.floor(Math.random()*99).toString().padStart(2,'0'); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'}).replace('.',''); }
+
+// ═══ LOGIN ═══
+document.getElementById('roleOptions').addEventListener('click', e=>{
+  const r = e.target.closest('.role-opt'); if(!r) return;
+  document.querySelectorAll('.role-opt').forEach(o=>o.classList.remove('selected'));
+  r.classList.add('selected');
+});
+function doLogin(){
+  const role = document.querySelector('.role-opt.selected').dataset.role;
+  const name = document.getElementById('loginName').value.trim() || 'Usuario';
+  setUser({ name, role });
+  document.getElementById('loginScreen').classList.remove('show');
+  document.getElementById('app').style.display = 'grid';
+  go();
+}
+function resetApp(){
+  if(!confirm('Borrar todos los datos y reiniciar?')) return;
+  [KEY_REMITOS,KEY_USER,KEY_INVOICES].forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+// ═══ ROUTER ═══
+const ROUTES = ['home','remitos','fleet','account','invoices'];
+function go(){
+  const hash = (location.hash||'#home').replace('#','');
+  const r = ROUTES.includes(hash) ? hash : 'home';
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+r).classList.add('active');
+  document.querySelectorAll('.nav-link[data-route]').forEach(l=>l.classList.toggle('active', l.dataset.route===r));
+  if(r==='home') renderHome();
+  if(r==='remitos') renderRemitos();
+  if(r==='fleet') renderFleet();
+  if(r==='account') renderAccount();
+  if(r==='invoices') renderInvoices();
+}
+window.addEventListener('hashchange', go);
+
+// ═══ HOME ═══
+function renderHome(){
+  const u = getUser();
+  document.getElementById('userAv').textContent = initials(u.name);
+  document.getElementById('userName').textContent = u.name;
+  document.getElementById('userRole').textContent = u.role || 'admin';
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const rs = getRemitos();
+  const invs = getInvoices();
+  const hoyISO = hoy(0);
+  const today = rs.filter(r=>r.date===hoyISO).length;
+  const noCae = rs.filter(r=>!r.cae).length;
+  const billed = rs.filter(r=>r.cae).reduce((a,r)=>a+(r.amount||0),0);
+  const invTot = invs.reduce((a,i)=>a+i.total,0);
+  const invPaid = invs.filter(i=>i.paid).reduce((a,i)=>a+i.total,0);
+
+  document.getElementById('kpiBilled').textContent = fmtARS(billed);
+  document.getElementById('kpiToday').textContent = today;
+  document.getElementById('kpiNoCae').textContent = noCae;
+  document.getElementById('kpiBal').textContent = fmtARS(invTot - invPaid);
+
+  const recent = rs.slice(0,5);
+  document.getElementById('recentBody').innerHTML = recent.map(r=>{
+    const u = FLEET.find(f=>f.id===r.unitId) || {plate:'—',driver:'—'};
+    const chip = r.status==='ok' ? '<span class="chip chip-green">CAE OK</span>' : r.status==='pending' ? '<span class="chip chip-amber">Pendiente</span>' : '<span class="chip chip-red">Rechazado</span>';
+    return `<tr>
+      <td><b>${r.sr}</b></td>
+      <td>${u.plate}</td>
+      <td>${u.driver}</td>
+      <td>${r.spot||'—'}</td>
+      <td><b>${fmtARS(r.amount)}</b></td>
+      <td>${chip}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="empty">Sin remitos aún.</td></tr>';
+
+  const fleetList = document.getElementById('fleetList');
+  document.getElementById('fleetCount').textContent = FLEET.length;
+  fleetList.innerHTML = FLEET.map(f=>`
+    <div class="truck">
+      <div class="truck-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17h13V7H3zM16 10h4l2 3v4h-6"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></div>
+      <div class="truck-meta"><b>U0${f.id} · ${f.plate}</b><span>${f.driver} · ${f.loc}</span></div>
+      <span class="chip ${f.status==='active'?'chip-green':'chip-amber'}">${f.status==='active'?'Activa':'Pausa'}</span>
+    </div>
+  `).join('');
+}
+
+// ═══ REMITOS ═══
+let histFilter = 'all';
+document.getElementById('filters').addEventListener('click', e=>{
+  const b = e.target.closest('.filter'); if(!b) return;
+  document.querySelectorAll('.filter').forEach(f=>f.classList.remove('active'));
+  b.classList.add('active');
+  histFilter = b.dataset.filter;
+  renderRemitos();
+});
+function renderRemitos(){
+  const all = getRemitos();
+  const counts = {
+    all: all.length,
+    ok: all.filter(r=>r.status==='ok').length,
+    pending: all.filter(r=>r.status==='pending').length,
+    rejected: all.filter(r=>r.status==='rejected').length,
+  };
+  document.querySelectorAll('[data-count]').forEach(el=>{ el.textContent = counts[el.dataset.count]||0; });
+  const list = histFilter==='all' ? all : all.filter(r=>r.status===histFilter);
+  const body = document.getElementById('remitosBody');
+  if(!list.length){ body.innerHTML = '<tr><td colspan="8" class="empty">Sin remitos en esta categoría.</td></tr>'; return; }
+  body.innerHTML = list.map(r=>{
+    const u = FLEET.find(f=>f.id===r.unitId) || {plate:'—',driver:'—'};
+    const chip = r.status==='ok' ? '<span class="chip chip-green">CAE OK</span>'
+      : r.status==='pending' ? '<span class="chip chip-amber">Sin firmar</span>'
+      : `<span class="chip chip-red">Rechazado</span>`;
+    return `<tr>
+      <td><b>${r.sr}</b></td>
+      <td>${fmtDate(r.date)}</td>
+      <td><b>${u.plate}</b><br><span style="font-size:11px;color:var(--muted);">${u.driver}</span></td>
+      <td>${r.spot||'—'}</td>
+      <td style="font-family:ui-monospace,Menlo,monospace;font-size:11px;">${r.dtm||'—'}<br>${r.i4||'—'}</td>
+      <td style="font-family:ui-monospace,Menlo,monospace;font-size:10px;">${r.cae||'—'}</td>
+      <td><b>${fmtARS(r.amount)}</b></td>
+      <td>${chip}${r.reason?'<br><span style="font-size:10px;color:var(--muted);">'+r.reason+'</span>':''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══ FLEET TABLE ═══
+function renderFleet(){
+  const rs = getRemitos();
+  const hoyISO = hoy(0);
+  document.getElementById('fleetTableBody').innerHTML = FLEET.map(f=>{
+    const today = rs.filter(r=>r.unitId===f.id && r.date===hoyISO).length;
+    return `<tr>
+      <td><b>U0${f.id}</b></td>
+      <td style="font-family:ui-monospace,Menlo,monospace;font-weight:700;">${f.plate}</td>
+      <td>${f.driver}</td>
+      <td>${f.loc}</td>
+      <td><span class="chip ${f.status==='active'?'chip-green':'chip-amber'}">${f.status==='active'?'Activa':'Pausa'}</span></td>
+      <td><b>${today}</b></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══ NEW REMITO (modal) ═══
+let draft = null;
+function openNewRemito(){
+  const rs = getRemitos();
+  const maxSR = Math.max(4821, ...rs.map(r=>parseInt(r.sr)||0));
+  document.getElementById('f_sr').value = maxSR + 1;
+  document.getElementById('f_unit').innerHTML = FLEET.map(f=>`<option value="${f.id}">U0${f.id} · ${f.plate} · ${f.driver}</option>`).join('');
+  const now = new Date();
+  const hh = now.getHours().toString().padStart(2,'0'), mm = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('f_out').value = hh+':'+mm;
+  document.getElementById('f_well').value = '';
+  document.getElementById('f_back').value = '';
+  document.getElementById('f_dtm').value = 'DTM-00' + (400+Math.floor(Math.random()*100));
+  document.getElementById('f_i4').value = 'I4-0' + (900+Math.floor(Math.random()*99));
+  document.getElementById('f_spot').value = 'Bajo los Toros · Loc 14';
+  document.getElementById('f_amount').value = 180000 + Math.floor(Math.random()*40000);
+  openModal('modalRemito');
+}
+function goSign(){
+  const sr = document.getElementById('f_sr').value.trim();
+  const unitId = parseInt(document.getElementById('f_unit').value);
+  const out = document.getElementById('f_out').value;
+  const well = document.getElementById('f_well').value;
+  const back = document.getElementById('f_back').value;
+  const dtm = document.getElementById('f_dtm').value.trim();
+  const i4 = document.getElementById('f_i4').value.trim();
+  const spot = document.getElementById('f_spot').value.trim();
+  const amount = parseInt(document.getElementById('f_amount').value)||0;
+  if(!sr || !dtm || !i4 || !spot){ toast('Completá SR, DTM, I-4 y punto de descarga'); return; }
+  draft = { id:'r-'+Date.now(), sr, unitId, out, well, back, dtm, i4, spot, amount, date:hoy(0) };
+  const u = FLEET.find(f=>f.id===unitId);
+  document.getElementById('signSummary').innerHTML = `
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">SR</span><b>${sr}</b></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Unidad</span><b>U0${u.id} · ${u.plate} · ${u.driver}</b></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Horas</span><b>${out} → ${well} → ${back||'—'}</b></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">DTM / I-4</span><b>${dtm} · ${i4}</b></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Destino</span><b>${spot}</b></div>
+    <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Importe</span><b>${fmtARS(amount)}</b></div>
+  `;
+  closeModal('modalRemito');
+  openModal('modalSign');
+  setTimeout(initSig, 100);
+}
+
+// ═══ SIGNATURE ═══
+let sigCtx, sigDraw=false, sigInk=false;
+function initSig(){
+  const c = document.getElementById('sigCanvas');
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width * devicePixelRatio;
+  c.height = rect.height * devicePixelRatio;
+  sigCtx = c.getContext('2d');
+  sigCtx.scale(devicePixelRatio, devicePixelRatio);
+  sigCtx.strokeStyle = '#0A0A0A'; sigCtx.lineWidth = 2.5; sigCtx.lineCap='round'; sigCtx.lineJoin='round';
+  sigInk = false;
+  document.getElementById('sigHint').classList.remove('hidden');
+  const pos = e=>{ const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:t.clientX-r.left,y:t.clientY-r.top}; };
+  c.onpointerdown = e=>{ sigDraw=true; const p=pos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); };
+  c.onpointermove = e=>{ if(!sigDraw) return; const p=pos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); if(!sigInk){ sigInk=true; document.getElementById('sigHint').classList.add('hidden'); } };
+  c.onpointerup = ()=>{ sigDraw=false; };
+  c.onpointerleave = ()=>{ sigDraw=false; };
+}
+function clearSig(){
+  const c = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0,0,c.width,c.height);
+  sigInk=false; document.getElementById('sigHint').classList.remove('hidden');
+}
+function submitRemito(){
+  if(!sigInk){ toast('Falta la firma del supervisor'); return; }
+  const c = document.getElementById('sigCanvas');
+  const remito = {...draft, status:'ok', cae:genCAE(), caeExpires:addDays(hoy(0),10), sig:true, sigData:c.toDataURL('image/png')};
+  const rs = getRemitos(); rs.unshift(remito); setRemitos(rs);
+  document.getElementById('successSub').textContent = `SR ${remito.sr} · Tetra · ${fmtDate(remito.date)}`;
+  document.getElementById('successCae').textContent = remito.cae;
+  document.getElementById('successExp').textContent = fmtDate(remito.caeExpires);
+  closeModal('modalSign');
+  openModal('modalSuccess');
+  draft = null;
+  go(); // rerender
+}
+
+// ═══ ACCOUNT ═══
+function renderAccount(){
+  const rs = getRemitos();
+  const invs = getInvoices();
+  const pending = rs.filter(r=>r.status==='ok' && !r.invoiced);
+  const net = pending.reduce((a,r)=>a+(r.amount||0),0);
+  const iva = Math.round(net*0.21);
+  const total = net + iva;
+  const billed = invs.reduce((a,i)=>a+i.total,0);
+  const paid = invs.filter(i=>i.paid).reduce((a,i)=>a+i.total,0);
+  document.getElementById('accBal').textContent = fmtARS(billed - paid);
+  document.getElementById('accBilled').textContent = fmtARS(billed);
+  document.getElementById('accPaid').textContent = fmtARS(paid);
+  document.getElementById('accInvCount').textContent = pending.length + ' remitos';
+  document.getElementById('accNet').textContent = fmtARS(net);
+  document.getElementById('accIva').textContent = fmtARS(iva);
+  document.getElementById('accTotal').textContent = fmtARS(total);
+
+  const moves = [];
+  invs.forEach(i=>{
+    moves.push({type:'invoice',label:'Factura '+i.code,sub:fmtDate(i.date)+' · '+i.count+' remitos',amount:-i.total,date:i.date});
+    if(i.paid) moves.push({type:'pay',label:'Pago recibido',sub:fmtDate(i.paidDate||i.date)+' · '+i.code,amount:+i.total,date:i.paidDate||i.date});
+  });
+  moves.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  const m = document.getElementById('accMoves');
+  if(!moves.length){ m.innerHTML = '<div class="empty">Aún sin movimientos. Generá la primera factura.</div>'; return; }
+  m.innerHTML = moves.slice(0,8).map(mv=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);">
+      <div style="width:36px;height:36px;border-radius:10px;background:${mv.amount>0?'#DCFCE7':'#F3F4F6'};color:${mv.amount>0?'#15803D':'var(--ink)'};display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="${mv.amount>0?'M12 5v14M5 12l7-7 7 7':'M12 19V5M5 12l7 7 7-7'}"/></svg>
+      </div>
+      <div style="flex:1;"><b style="font-size:13px;">${mv.label}</b><div style="font-size:11px;color:var(--muted);">${mv.sub}</div></div>
+      <b style="font-size:14px;color:${mv.amount>0?'#15803D':'var(--ink)'};">${mv.amount>0?'+':'−'} ${fmtARS(Math.abs(mv.amount))}</b>
+    </div>
+  `).join('');
+}
+function emitInvoice(){
+  const rs = getRemitos();
+  const pending = rs.filter(r=>r.status==='ok' && !r.invoiced);
+  if(!pending.length){ toast('No hay remitos pendientes de facturar'); return; }
+  const net = pending.reduce((a,r)=>a+(r.amount||0),0);
+  const iva = Math.round(net*0.21);
+  const total = net + iva;
+  const invs = getInvoices();
+  const code = 'F-0' + (233 + invs.length);
+  invs.push({ code, date:hoy(0), count:pending.length, net, iva, total, paid:false });
+  setInvoices(invs);
+  pending.forEach(p=>p.invoiced = code);
+  setRemitos(rs);
+  toast('Factura ' + code + ' emitida · Total ' + fmtARS(total));
+  go();
+}
+
+// ═══ INVOICES ═══
+function renderInvoices(){
+  const invs = getInvoices();
+  const body = document.getElementById('invoicesBody');
+  if(!invs.length){ body.innerHTML = '<tr><td colspan="8" class="empty">Aún sin facturas. Generá la primera desde Cuenta corriente.</td></tr>'; return; }
+  body.innerHTML = invs.map(i=>`
+    <tr>
+      <td><b>${i.code}</b></td>
+      <td>${fmtDate(i.date)}</td>
+      <td>${i.count}</td>
+      <td>${fmtARS(i.net)}</td>
+      <td>${fmtARS(i.iva)}</td>
+      <td><b>${fmtARS(i.total)}</b></td>
+      <td><span class="chip ${i.paid?'chip-green':'chip-amber'}">${i.paid?'Cobrada':'A cobrar'}</span></td>
+      <td>${i.paid?'':'<button class="btn btn-ghost" style="padding:6px 12px;font-size:11px;" onclick="markPaid(\''+i.code+'\')">Marcar cobrada</button>'}</td>
+    </tr>
+  `).join('');
+}
+function markPaid(code){
+  const invs = getInvoices();
+  const i = invs.find(x=>x.code===code);
+  if(!i) return;
+  i.paid = true; i.paidDate = hoy(0);
+  setInvoices(invs);
+  toast('Factura '+code+' marcada como cobrada');
+  go();
+}
+
+// ═══ MODAL ═══
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+
+// ═══ TOAST ═══
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ═══ INIT ═══
+if(!getUser()){
+  document.getElementById('loginScreen').classList.add('show');
+} else {
+  document.getElementById('app').style.display = 'grid';
+  go();
+}
+</script>
+
+</body>
+</html>
